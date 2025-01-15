@@ -1,6 +1,6 @@
 import unittest
 from bettercli.command import Command
-from bettercli.option import Option, InvalidType, InvalidLength
+
 
 class TestCommand(unittest.TestCase):
     def setUp(self):
@@ -30,6 +30,3 @@ class TestCommand(unittest.TestCase):
         self.cmd.add_positional_option("pos", str, "default", length=1)
         self.cmd.add_keyword_option("kw", str, "default", "-k", length=1)
         self.assertEqual(self.cmd.schema, ["test", "pos", "kw"])
-
-if __name__ == '__main__':
-    unittest.main()
