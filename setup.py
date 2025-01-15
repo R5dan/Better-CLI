@@ -5,7 +5,7 @@ from pathlib import Path
 
 setup(
     name="bettercli",
-    version="0.0.3",
+    version="0.0.4",
     description="A better CLI library",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
