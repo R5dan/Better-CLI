@@ -7,7 +7,7 @@ setup(
     name="bettercli",
     version="0.0.1",
     description="A better CLI library",
-    long_description=Path("README.md").read_text(),
+    long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/r5dan/better-cli",
     author="R5dan",
