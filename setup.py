@@ -13,7 +13,6 @@ setup(
     author="R5dan",
     license="MIT",
     classifiers=[
-        "License :: OSI Approved :: MIT",
         "Development Status :: 3 - Alpha",
         # "Development Status :: 4 - Beta",
         # "Development Status :: 5 - Production/Stable",
