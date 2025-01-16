@@ -100,9 +100,20 @@ class Command:
                         Got {op.op}
                         """
                         )
+                    print(f"""
+                        Invalid type for option {name}
+                        Expected between {op.expected.min_length} and {op.expected.max_length} arguments
+                        Got {op.op}
+                        """)
+                    return True
                 elif isinstance(op, InvalidLength):
                     logger.debug(f"Command.run: Invalid length for option {name}")
-                    pass
+                    print(f"""
+                        Invalid length for option {name}
+                        Expected {op.expected}
+                        Got {op.op}
+                        """)
+                    return True
                 options[name] = op
 
             logger.debug(f"Command.run: Calling callback with options: {options}")

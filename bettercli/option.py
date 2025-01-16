@@ -25,12 +25,12 @@ class Option(t.Generic[T]):
         self.type = List(type)
         self.length = Length(min_length, max_length, length)
 
-    def validate(self, options:'list[str]') -> 't.Union[InvalidLength, InvalidType, list[T]]':
+    def validate(self, options:'list[str]') -> 't.Union[InvalidLength, InvalidType, list[T], bool]':
         logger.debug(f"Option.validate: {options=}")
         logger.debug(f"Option.validate: Validating length {len(options)} against min={self.length.min_length}, max={self.length.max_length}")
         if resp := not self.length.validate(len(options)):
             logger.debug(f"Option.validate: Invalid length {len(options)}, returning {not resp}")
-            return InvalidLength(self, options)
+            return InvalidLength(self, options, self.length)
         ret = []
         logger.debug(f"Option.validate: Validating types")
         for type_, option in zip(self.type, options):
@@ -55,14 +55,14 @@ class Option(t.Generic[T]):
         if len(options) < self.length.min_length:
             logger.debug(f"Option.validate: Not enough options ({len(options)} < {self.length.min_length})")
             if len(self.default) <= self.length.min_length:
-                return InvalidLength(self, options)
+                return InvalidLength(self, options, self.length)
             else:
                 logger.debug(f"Option.validate: Using defaults {self.default[len(options):]}")
                 ret.extend(self.default[len(options):])
         
         if len(options) > self.length.max_length:
             logger.debug(f"Option.validate: Too many options ({len(options)} > {self.length.max_length})")
-            return InvalidLength(self, options)
+            return InvalidLength(self, options, self.length)
         
         logger.debug(f"Option.validate: Returning {ret}")
         return ret
@@ -76,7 +76,7 @@ class Keyword_option(Option[T]):
         super().__init__(name, type, default=default, length=length, min_length=min_length, max_length=max_length)
         self.keys = keys
 
-    def validate(self, options: 'list[str]') -> 't.Union[InvalidLength, InvalidType, bool]':
+    def validate(self, options: 'list[str]') -> 't.Union[InvalidLength, InvalidType, bool, list[T]]':
         logger.debug(f"Keyword_option.validate: {options=}")
         if options[0] not in self.keys:
             return False

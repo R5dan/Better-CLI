@@ -23,4 +23,6 @@ class CLI:
         logger.debug("Running CLI")
         command_args = sys.argv[1:]
         for cmd in self.commands:
-            cmd.run(command_args)
+            if cmd.validate(command_args):
+                cmd.run(command_args)
+                return

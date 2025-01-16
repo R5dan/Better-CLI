@@ -1,5 +1,6 @@
 import logging
 from bettercli.option import Option
+from bettercli.utils import Length
 
 logger = logging.getLogger("bettercli")
 
@@ -15,13 +16,14 @@ class InvalidOption(BetterCLIException):
 
 class InvalidType(InvalidOption):
     """Raised when an option is not of the correct type"""
-    def __init__(self, option:'Option', op, expected):
+    def __init__(self, option:'Option', op, expected:'Length'):
         logger.debug(f"InvalidType: {option=} {op=} {expected=}")
         super().__init__(option, op)
         self.expected = expected
 
 class InvalidLength(InvalidOption):
     """Raised when an option is not the correct length"""
-    def __init__(self, option:'Option', op):
+    def __init__(self, option:'Option', op, expected):
         logger.debug(f"InvalidLength: {option=} {op=}")
         super().__init__(option, op)
+        self.expected = expected
