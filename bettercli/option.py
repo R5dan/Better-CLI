@@ -21,7 +21,11 @@ T = t.TypeVar("T", bound=ValidType)
 
 
 class Keyword_option(t.Generic[T]):
-    def __init__(self, name:'str', type:'list[type[T]]'=[None], *keys, default:'list[T]'=[None], length=1, max_occurrences=1):
+    def __init__(self, name:'str', type:'list[type[T]]'=None, *keys, default:'list[T]'=None, length=1, max_occurrences=1):
+        if type is None:
+            type = [None]
+        if default is None:
+            default = [None]
         logger.debug(f"Keyword_option.__init__: {name=} {type=} {keys=} {default=} {length=} {max_occurrences=}")
         for k in keys:
             if not k.startswith("-"):
