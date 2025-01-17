@@ -12,6 +12,9 @@ class Callback(t.Protocol):
     def __call__(self, **kwargs) -> None: ...
 
 class Command:
+    """
+    
+    """
     options:'dict[str, Option]' = {}
     pos_options:'dict[str, Positional_option]' = {}
     kw_options:'dict[str, Keyword_option]' = {}
