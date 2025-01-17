@@ -67,7 +67,7 @@ class Command:
         logger.debug(f"Command.add_keyword_option: {name=} {_type=} {default=} {kws=} {length=} {max_occurrences=}")
         if name in self.kw_options:
             raise ValueError(f"{name} already defined. {name} is a {type(self.kw_options[name]).__name__} with type {self.kw_options[name].type}")
-        elif name in self.pos_options:
+        elif any(option.name == name for option in self.pos_options):
             raise ValueError(f"{name} already defined. {name} is a {type(self.pos_options[name]).__name__} with type {self.pos_options[name].type}")
         
 
