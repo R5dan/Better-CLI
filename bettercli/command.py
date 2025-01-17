@@ -56,7 +56,7 @@ class Command:
 
     def add_positional_option(self, name:'str', type_:'type[T]', default:'T', *, length:'int'=1):
         logger.debug(f"Command.add_positional_option: {name=} {type_=} {default=} {length=}")
-        if name in self.pos_options:
+        if any(option.name == name for option in self.pos_options):
             raise ValueError(f"{name} already defined. {name} is a {type(self.pos_options[name]).__name__} with type {self.pos_options[name].type}")
         elif name in self.kw_options:
             raise ValueError(f"{name} already defined. {name} is a {type(self.kw_options[name]).__name__} with type {self.kw_options[name].type}")
