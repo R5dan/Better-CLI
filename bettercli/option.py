@@ -92,7 +92,9 @@ class Positional_option(t.Generic[T]):
         return self.default is not None
 
 
-    def validate(self, option: 'str', cur_option: 'list[str]'=[]) -> 'tuple[t.Union[InvalidType, InvalidLength, t.Literal[True]], bool]':
+    def validate(self, option: 'str', cur_option: 'list[str]'=None) -> 'tuple[t.Union[InvalidType, InvalidLength, t.Literal[True]], bool]':
+        if cur_option is None:
+            cur_option = []
         self.length += 1
         if self.length > self.max_length:
             return InvalidLength(self, cur_option, self.max_length), True
