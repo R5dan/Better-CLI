@@ -138,10 +138,11 @@ class Command:
 
         else:
             logger.debug(f"Command.run: No positional options, {len(self.pos_options)=} {command=} {len(command)=}")
-            logger.debug(f"{command[0].startswith('-')=}")
             options = check_all_pos_args({}, self.pos_options)
-            kw = True
-            index = 0
+            kw = False
+            if len(command) > 0 and command[0].startswith("-"):
+                kw = True
+                index = 0
 
             
 
