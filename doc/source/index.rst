@@ -9,14 +9,14 @@ Better CLI is a Python package that provides a simple and intuitive way to creat
 .. grid:: 1 2 2 2
 
     .. grid-item-card:: Getting Started
-        :link: guides/getting_started
+        :doc: guides/getting_started
         :link-type: doc
         :margin: 0 3 0 0
 
         Get started with Better CLI by following the :doc:`Getting Started <getting_started>` guide.
 
     .. grid-item-card:: Reference
-        :link: reference/index
+        :link: reference
         :link-type: doc
         :margin: 0 3 0 0
 
@@ -40,7 +40,6 @@ Better CLI is a Python package that provides a simple and intuitive way to creat
     :hidden:
     :maxdepth: 3
 
-    guides/getting_started
-    reference/index
-    examples
+    reference
+    guides
     contributing

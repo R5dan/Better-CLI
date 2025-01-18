@@ -18,6 +18,7 @@ class CLI:
 
     Example:
         >>> cli = CLI()
+        >>> @pos_option("name", str, default="World", length=1)
         >>> @cli.command("greet")
         ... def greet(name):
         ...     print(f"Hello {name}!")

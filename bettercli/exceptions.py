@@ -1,6 +1,10 @@
 import logging
-from bettercli.option import Option
-from bettercli.utils import Length
+import typing as t
+
+if t.TYPE_CHECKING:
+    from bettercli.option import Option
+    from bettercli.utils import Length
+
 
 logger = logging.getLogger("bettercli")
 

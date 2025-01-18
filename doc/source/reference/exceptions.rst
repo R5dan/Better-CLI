@@ -2,7 +2,7 @@
 Exceptions
 ==========
 
-.. currentmodule:: bettercli
+.. currentmodule:: bettercli.exceptions
 
 Exceptions
 ----------
@@ -21,8 +21,10 @@ BetterCLIException
 ``BetterCLIException`` is the base class for all exceptions raised by Better CLI.
 It is the base class for ``InvalidOption``
 
-.. autoclass:: BetterCLIException
+.. autosummary::
     :members:
+
+    BetterCLIException
 
 **************
 InvalidOption
@@ -30,8 +32,10 @@ InvalidOption
 
 ``InvalidOption`` is the base class for invalid option exceptions.
 
-.. autoclass:: InvalidOption
+.. autosummary::
     :members:
+
+    exceptions.InvalidOption
 
 ****************
 InvalidType
