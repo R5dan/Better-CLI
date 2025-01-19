@@ -19,6 +19,6 @@ The following classes and functions are part of the public API of Better CLI:
 .. toctree::
    :maxdepth: 2
 
-    cli
-    arguments
-    exceptions
+   cli
+   arguments
+   exceptions

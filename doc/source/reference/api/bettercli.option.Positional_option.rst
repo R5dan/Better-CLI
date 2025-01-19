@@ -9,6 +9,12 @@ Positional\_option
 
    
    
+   .. rubric:: Attributes
+   
+   
+   .. autoattribute:: has_default
+      :noindex:
+   
    
 
    

@@ -9,12 +9,6 @@ CLI
 
    
    
-   .. rubric:: Attributes
-   
-   
-   .. autoattribute:: commands
-      :noindex:
-   
    
 
    
@@ -27,6 +21,8 @@ CLI
    .. automethod:: add_command
       :noindex:
    .. automethod:: command
+      :noindex:
+   .. automethod:: default
       :noindex:
    .. automethod:: run
       :noindex:
