@@ -123,7 +123,7 @@ class Spinner:
         if "fg-color" in message:
             msg = f"\033[{message['fg-color']}m{msg}\033[0m"
         if "bg-color" in message:
-            msg = f"\033[{msg}m"
+            msg = f"\033[{message['bg-color']}m{msg}\033[0m"
         return msg
 
     def set_message(self, message: 'Message', duration: 'float' = -1):
