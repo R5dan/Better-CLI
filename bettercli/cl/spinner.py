@@ -129,7 +129,7 @@ class Spinner:
     def set_message(self, message: 'Message', duration: 'float' = -1):
         """
         Args:
-            message (str): The message to display.
+            message (Message): The message to display, as a dictionary containing at least the 'message' key.
             duration (float, optional): The duration of the message in seconds. Set to -1 to keep the message indefinitely. Defaults to -1.
         """        
         def _sleep(spinner: 'Spinner', duration: 'float'):
