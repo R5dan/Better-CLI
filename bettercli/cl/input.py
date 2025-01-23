@@ -3,7 +3,11 @@ import sys
 import keyboard
 import time
 import typing as t
-from . import colours as c
+from .ansi import ANSIColors, Cursor
+
+import logging
+
+logger = logging.getLogger("bettercli.cl")
 
 T = t.TypeVar("T", bound=dict)
 
@@ -13,7 +17,7 @@ class Dict(dict, t.Generic[T]):
         self.default = default
         super().__init__(dict)
 
-    def get(self, key:'T', default=None) -> 'T|None':
+    def get(self, key:'T', default=None) -> 'T|t.Literal[""]':
         if key in self:
             return self[key]
         elif default is not None:
@@ -21,7 +25,7 @@ class Dict(dict, t.Generic[T]):
         elif key in self.default:
             return self.default[key]
         else:
-            return None
+            return ""
 
 SELECTOR_SYMBOL = t.TypedDict("SELECTOR_SYMBOL",
     {
@@ -54,7 +58,6 @@ CURSOR_STYLE = t.TypedDict("CURSOR_STYLE",
         "bg-color": str,
         "fg-color": str,
         "symbol": str,
-        "on": bool,
     },
     total=False
 )
@@ -82,43 +85,45 @@ class Input:
 
     DEFAULT_STYLE:'INPUT_STYLES' = Dict({ # type: ignore
         "prompt": Dict({
-            "bg-color": c.ANSIColors.reset,
-            "fg-color": c.ANSIColors.reset,
+            "bg-color": ANSIColors.reset,
+            "fg-color": ANSIColors.reset,
         }),
         "cursor": Dict({
-            "bg-color": c.ANSIColors.reset,
-            "fg-color": c.ANSIColors.cyan,
+            "bg-color": ANSIColors.reset,
+            "fg-color": ANSIColors.cyan,
             "symbol": "█",
-            "on": False,
         }),
         "input": Dict({
-            "bg-color": c.ANSIColors.reset,
-            "fg-color": c.ANSIColors.reset,
+            "bg-color": ANSIColors.reset,
+            "fg-color": ANSIColors.reset,
         }),
         "selector": Dict({
             "cursor": Dict({
-                "fg-color": c.ANSIColors.cyan,
+                "fg-color": ANSIColors.cyan,
             }),
             "not cursor": Dict({
-                "fg-color": c.ANSIColors.reset,
+                "fg-color": ANSIColors.reset,
             }),
         })
     })
-    def __init__(self, prompt: str, suggestions: dict[str, str] = None, *, style: 'INPUT_STYLES' = {}):
+    def __init__(self, prompt: 'str', suggestions: 'list[str]' = None, *, style: 'INPUT_STYLES' = {}):
         self.prompt = prompt
-        self.suggestions = suggestions or {}
+        self.suggestions = suggestions or []
         self.input_buffer = []
         self.cursor_pos = 0
-        self.current_suggestions: dict[str, str] = {}
+        self.current_suggestions: list[str] = []
         self.selected_suggestion = 0
         self.running = True
         self._on_input = lambda x: self.suggestions
-        self.validate = lambda x: True
+        self.validate:'t.Callable[[str], t.Union[str, t.Literal[True]]]' = lambda x: True
         self.style = Dict[INPUT_STYLES](style, self.DEFAULT_STYLE) # type: ignore
+        self.error = ""
         
-    def on_input(self):
+    def on_input(self, filter:'bool'=True, case_sensitive:'bool'=False):
         """Decorator to handle input changes and update suggestions"""
-        def decorator(func: t.Callable[[str], dict[str, str]]):
+        self.filter = filter
+        self.case_sensitive = case_sensitive
+        def decorator(func: 't.Callable[[str], list[str]]'):
             self._on_input = func
             @wraps(func)
             def wrapper(input: str):
@@ -127,7 +132,7 @@ class Input:
         return decorator
     
     def validator(self):
-        def decorator(func: t.Callable[[str], t.Union[str, t.Literal[True]]]):
+        def decorator(func: 't.Callable[[str], t.Union[str, t.Literal[True]]]'):
             self.validate = func
             @wraps(func)
             def wrapper(input: str):
@@ -135,39 +140,37 @@ class Input:
             return wrapper
         return decorator
         
-    def set_suggestions(self, suggestions: dict[str, str]):
+    def set_suggestions(self, suggestions: 'list[str]'):
         """Update the suggestions dictionary"""
         self.suggestions = suggestions
         
-    def _get_suggestions(self, text: str) -> dict[str, str]:
+    def _get_suggestions(self, text: str) -> 'list[str]':
         """Get matching suggestions based on current input"""
         if not text:
-            return {}
-        suggestions = self._on_input(text)
-        return {k:v for k,v in suggestions.items() 
-               if k.lower().startswith(text.lower())}
+            return []
+        if self.filter:
+            if self.case_sensitive:
+                return [suggestion for suggestion in self._on_input(text) if text in suggestion]
+            
+            return [suggestion for suggestion in self._on_input(text) if text.lower() in suggestion.lower()]
+        else:
+            return self._on_input(text)
+        
         
     def _print_screen(self):
         """Print the current state of the input and suggestions"""
-        # Clear screen
-        sys.stdout.write("\033[2J\033[H")
         
         # Print input line
-        input_str = f"{self.style.get("input").get("fg-color")}{self.style.get("input").get("bg-color")}{"".join(self.input_buffer)}{c.ANSIColors.reset}"
-        prompt = f"{self.style.get('prompt').get('fg-color')}{self.style.get('prompt').get('bg-color')}{self.prompt}{c.ANSIColors.reset}"
+        input_str = f"{self.style.get("input").get("fg-color")}{self.style.get("input").get("bg-color")}{"".join(self.input_buffer)}{ANSIColors.reset}"
+        prompt = f"{self.style.get('prompt').get('fg-color')}{self.style.get('prompt').get('bg-color')}{self.prompt}{ANSIColors.reset}"
 
         suggestions = []
-        for i, (_, description) in enumerate(self.current_suggestions.items()):
+        for i, suggestion in enumerate(self.current_suggestions):
             type = "cursor" if self.selected_suggestion == i else "not cursor"
             style = f"{self.style.get("selector").get(type).get("fg-color")}{self.style.get('selector').get(type).get("bg-color")}"
-            suggestions.append(f"{style}{description}{c.ANSIColors.reset}")
+            suggestions.append(f"{style}{suggestion}{ANSIColors.reset}")
 
-        sys.stdout.write(f"{prompt}{input_str}\n{"".join(suggestions)}")
-
-
-        # Move cursor back to input
-        sys.stdout.write(f"\033[{len(self.current_suggestions)+1}A")
-        sys.stdout.write(f"\033[{len(self.prompt) + self.cursor_pos}C")
+        sys.stdout.write(f"{Cursor.clear_screen}{Cursor.goto()}{prompt}{input_str}{self.style.get("cursor").get("fg-color")}{self.style.get('cursor').get("bg-color")}{self.style.get('cursor').get("symbol")}{ANSIColors.reset}\n{"\n".join(suggestions)}\n{self.error}{Cursor.goto(1, (len("".join(self.input_buffer)) + len(self.prompt)))}")
         sys.stdout.flush()
         
     def _handle_input(self, event):
@@ -195,7 +198,7 @@ class Input:
             
         elif event.name == "tab":
             if self.current_suggestions:
-                suggestion = list(self.current_suggestions.keys())[self.selected_suggestion]
+                suggestion = self.current_suggestions[self.selected_suggestion]
                 self.input_buffer = list(suggestion)
                 self.cursor_pos = len(suggestion)
                 input()
@@ -227,10 +230,24 @@ class Input:
     def run(self) -> str:
         """Run the autocomplete input loop"""
         keyboard.on_press(self._handle_input, suppress=True)
+        Cursor.write.hide_cursor()
         self._print_screen()
-        
-        while self.running:
-            time.sleep(0.1)
-        
-        print()  
+        validated = False
+        while not validated:
+            self.running = True
+            while self.running:
+                time.sleep(0.1)
+            
+            if (error := self.validate("".join(self.input_buffer))) is not True:
+                logger.debug(f"Input: {''.join(self.input_buffer)} failed: {error}")
+                self.error = error
+                self.selected_suggestion = 0
+                self.cursor_pos = 0
+                self.input_buffer = []
+                self._print_screen()
+            else:
+                logger.debug(f"Input: {''.join(self.input_buffer)} success")
+                validated = True
+
+        Cursor.write.show_cursor()
         return "".join(self.input_buffer)

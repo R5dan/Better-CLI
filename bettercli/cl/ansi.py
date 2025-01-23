@@ -1,3 +1,5 @@
+import sys
+
 SYMBOL = "\033[{}m"
 
 class ANSIColors:    
@@ -95,3 +97,130 @@ class ANSIColors:
     bg_lavender = color_256(183, background=True)
     bg_coral = color_256(209, background=True)
     bg_olive = color_256(100, background=True)
+
+
+
+class CursorWrite:
+    @staticmethod
+    def hide_cursor():
+        sys.stdout.write(Cursor.hide_cursor)
+    
+    @staticmethod
+    def show_cursor():
+        sys.stdout.write(Cursor.show_cursor)
+
+    @staticmethod
+    def up(n=1):
+        sys.stdout.write(Cursor.up(n))
+    
+    @staticmethod
+    def down(n=1):
+        sys.stdout.write(Cursor.down(n))
+    
+    @staticmethod
+    def right(n=1):
+        sys.stdout.write(Cursor.right(n))
+
+    @staticmethod
+    def left(n=1):
+        sys.stdout.write(Cursor.left(n))
+    
+    @staticmethod
+    def goto(x=1, y=1):
+        sys.stdout.write(Cursor.goto(x, y))
+
+    @staticmethod
+    def beginning_of_line(n=0):
+        """Move cursor to the beginning of the line n lines down"""
+        sys.stdout.write(Cursor.beginning_of_line(n))
+
+    @staticmethod
+    def start_of_line(n=0):
+        """Move cursor to the beginning of the line n lines up"""
+        sys.stdout.write(Cursor.start_of_line(n))
+
+    @staticmethod
+    def save():
+        sys.stdout.write(Cursor.save)
+
+    @staticmethod
+    def restore():
+        sys.stdout.write(Cursor.restore)
+    
+    @staticmethod
+    def clear_line_from_cursor():
+        sys.stdout.write(Cursor.clear_line_from_cursor)
+
+    @staticmethod
+    def clear_line_to_cursor():
+        sys.stdout.write(Cursor.clear_line_to_cursor)
+
+    @staticmethod
+    def clear_line():
+        sys.stdout.write(Cursor.clear_line)
+
+    @staticmethod
+    def clear_screen_from_cursor():
+        sys.stdout.write(Cursor.clear_screen_from_cursor)
+
+    @staticmethod
+    def clear_screen_to_cursor():
+        sys.stdout.write(Cursor.clear_screen_to_cursor)
+
+    @staticmethod
+    def clear_screen():
+        sys.stdout.write(Cursor.clear_screen)
+
+class Cursor:
+    write = CursorWrite()
+
+    
+    hide_cursor = "\033[?25l"
+    
+    show_cursor = "\033[?25h"
+    
+    @staticmethod
+    def up(n=1):
+        return f"\033[{n}A"
+    
+    @staticmethod
+    def down(n=1):
+        return f"\033[{n}B"
+    
+    @staticmethod
+    def right(n=1):
+        return f"\033[{n}C"
+    
+    @staticmethod
+    def left(n=1):
+        return f"\033[{n}D"
+    
+    @staticmethod
+    def goto(x=1, y=1):
+        return f"\033[{y};{x}H"
+
+    @staticmethod
+    def beginning_of_line(n=0):
+        """Move cursor to the beginning of the line n lines down"""
+        return f"\033[{n}E"
+    
+    @staticmethod
+    def start_of_line(n=0):
+        """Move cursor to the beginning of the line n lines up"""
+        return f"\033[{n}F"
+    
+    save = "\033[s"
+
+    restore = "\033[u"
+    
+    clear_line_from_cursor = "\033[K"
+
+    clear_line_to_cursor = "\033[1K"
+
+    clear_line = "\033[2K"
+
+    clear_screen_from_cursor = "\033[J"
+
+    clear_screen_to_cursor = "\033[1J"
+
+    clear_screen = "\033[2J"

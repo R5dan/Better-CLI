@@ -39,12 +39,12 @@ Style = t.TypedDict("Style", {
 class Spinner:
     """A terminal spinner animation."""
     
-    def __init__(self, style: Style = None) -> None:
+    def __init__(self, style: Style = None, message:'t.Union[Message, str]'="") -> None:
         self.style = style
         self._running: 'bool' = False
         self._print: 'list[tuple]' = []
         self.thread: 't.Optional[Thread]' = None
-        self.message: 'str' = ""
+        self.message: 'str' = message if isinstance(message, str) else self._format_message(message)
         if self.style is None:
             self.style = {
                 "states": [
@@ -75,6 +75,7 @@ class Spinner:
                     {"symbol": "⠦", "wait": 0.1},
                     {"symbol": "⠧", "wait": 0.1},
                     {"symbol": "⠇", "wait": 0.1},
+                    {"symbol": "⠏", "wait": 0.1},
                 ]
             })
 
@@ -91,6 +92,7 @@ class Spinner:
         if self.thread:
             self.thread.join()
         print('\r' + ' ' * 20 + '\r', end='')  # Clear the spinner line
+        print('\033[?25h', end='', flush=True)
         sys.stdout.flush()
 
     def _spin(self, stream: 't.TextIO') -> None:
@@ -113,9 +115,10 @@ class Spinner:
                     symbol = f"\033[{state['bg-color']}m{symbol}\033[0m"
 
                 message = self.message or self._format_message(state.get("message", {"message": ""}))
-
-                print(f"\r{symbol} {message}", end='', file=stream)
-                stream.flush()
+                try:
+                    stream.write(f"\r{symbol} {message}")
+                finally:
+                    stream.flush()
                 time.sleep(wait)
 
     def _format_message(self, message: 'Message'):
@@ -126,7 +129,7 @@ class Spinner:
             msg = f"\033[{message['bg-color']}m{msg}\033[0m"
         return msg
 
-    def set_message(self, message: 'Message', duration: 'float' = -1):
+    def set_message(self, message: 't.Union[Message, str]', duration: 'float' = -1):
         """
         Args:
             message (Message): The message to display, as a dictionary containing at least the 'message' key.
@@ -135,8 +138,13 @@ class Spinner:
         def _sleep(spinner: 'Spinner', duration: 'float'):
             time.sleep(duration)
             spinner.message = ""
-
-        self.message = self._format_message(message)
+        if isinstance(message, str):
+            self.message = message
+        elif isinstance(message, dict):
+            self.message = self._format_message(message)
+        else:
+            raise TypeError(f"message must be a string or a dictionary not {type(message).__name__}")
+        
         if duration > 0:
             thread = Thread(target=_sleep, args=(self, duration))
             thread.start()

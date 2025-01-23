@@ -9,7 +9,7 @@ class TogglableDebugLogger:
         
         # Create handlers
         self.console_handler = logging.StreamHandler(sys.stdout)
-        self.file_handler = logging.FileHandler('debug.log')
+        self.file_handler = logging.FileHandler('debug.cl.log')
         
         # Create formatters and add it to handlers
         log_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -44,6 +44,7 @@ class TogglableDebugLogger:
     def enable_file_logging(self):
         """Enable file logging"""
         self.logger.addHandler(self.console_handler)
+        self.console_handler.setLevel(logging.DEBUG)
         self.logger.debug("File logging enabled")
     
     def disable_file_logging(self):

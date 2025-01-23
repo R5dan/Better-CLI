@@ -1,9 +1,10 @@
+from . import Cursor
 import typing as t
 import keyboard
 import sys
 import time
 
-from .colours import ANSIColors
+from .ansi import ANSIColors
 
 SYMBOL = t.TypedDict("SYMBOL",
     {
@@ -146,17 +147,17 @@ class Selector:
 
     def run(self, *, sleep:'float'=0.1):
         """Run the selector."""
+        Cursor.hide_cursor()
         self.keys = list(self.options.keys())
         self.key = self.keys[0]
 
         sys.stdout.write(ANSIColors.reset)
         self.print()
-        keyboard.on_press(self.handler)
+        keyboard.on_press(self.handler, suppress=True)
         validated = False
         while not validated:
             while not self.ENTERED:
-                # Add a small sleep to prevent CPU spinning
-                time.sleep(0.1)
+                pass
             if (validate := self._validator(self.selected)) != True:
                 self.error = validate
                 self.ENTERED = False
@@ -164,13 +165,14 @@ class Selector:
             else:
                 validated = True
         time.sleep(sleep) # Add a small sleep to prevent UI from being weird sometimes
+        Cursor.show_cursor()
         return self.selected
     
 
     def print(self):
         """Print the selector."""
+
         selector = f"{self.question}\n\n" if self.question else ""
-        print(self.options)
         for key, option in self.options.items():
             style = self.style["SELECTED" if key in self.selected else "NOT SELECTED"]
             if self.ALL and "ALL" in self.style:
