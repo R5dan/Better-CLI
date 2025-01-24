@@ -1,9 +1,10 @@
+from . import Cursor
 import typing as t
 import keyboard
 import sys
 import time
 
-from .colours import ANSIColors
+from .ansi import ANSIColors
 
 SYMBOL = t.TypedDict("SYMBOL",
     {
@@ -79,23 +80,23 @@ class Selector:
     STYLE = dict[t.Union[str, t.Literal["ALL", "NONE", "SELECTED", "NOT SELECTED", "CURSOR", "NOT CURSOR"]], STYLES]
     DEFAULT_SELECTED:'STYLES' = {
         "symbol": {
-            "bg-color": ANSIColors.reset,
-            "fg-color": ANSIColors.reset,
+            "bg-color": ANSIColors.reset_bg,
+            "fg-color": ANSIColors.reset_fg,
             "symbol": "●",
         }
     }
     DEFAULT_CURSOR:'STYLES' = {
-        "bg-color": ANSIColors.reset,
+        "bg-color": ANSIColors.reset_bg,
         "fg-color": ANSIColors.cyan,
     }
     DEFAULT_NOT_CURSOR:'STYLES' = {
-        "bg-color": ANSIColors.reset,
-        "fg-color": ANSIColors.reset,
+        "bg-color": ANSIColors.reset_bg,
+        "fg-color": ANSIColors.reset_fg,
     }
     DEFAULT_NOT_SELECTED:'STYLES' = {
         "symbol": {
-            "bg-color": ANSIColors.reset,
-            "fg-color": ANSIColors.reset,
+            "bg-color": ANSIColors.reset_bg,
+            "fg-color": ANSIColors.reset_fg,
             "symbol": "○",
         }
     }
@@ -113,8 +114,6 @@ class Selector:
         assert isinstance(options, dict), "Options must be a dictionary"
         self.options = options
         self.selected = []
-        self.ALL = False
-        self.NONE = True
         self.ENTERED = False
         self.style:'Selector.STYLE' = {}
         self.keybinds = keybinds
@@ -123,12 +122,21 @@ class Selector:
         self.question = question
         self._validator = validator
         self.error = ""
+        self.keys = list(self.options.keys())
 
         
         self.style["SELECTED"] = {**self.DEFAULT_SELECTED, **self.style.get("SELECTED", {})}
         self.style["NOT SELECTED"] = {**self.DEFAULT_NOT_SELECTED, **self.style.get("NOT SELECTED", {})}
         self.style["CURSOR"] = {**self.DEFAULT_CURSOR, **self.style.get("CURSOR", {})}
         self.style["NOT CURSOR"] = {**self.DEFAULT_NOT_CURSOR, **self.style.get("NOT CURSOR", {})}
+
+    @property
+    def NONE(self):
+        return self.selected == []
+
+    @property
+    def ALL(self):
+        return self.selected == self.keys
 
 
     def handler(self, key):
@@ -146,31 +154,34 @@ class Selector:
 
     def run(self, *, sleep:'float'=0.1):
         """Run the selector."""
-        self.keys = list(self.options.keys())
-        self.key = self.keys[0]
+        try:
+            Cursor.write.hide_cursor()
+            self.keys = list(self.options.keys())
+            self.key = self.keys[0]
 
-        sys.stdout.write(ANSIColors.reset)
-        self.print()
-        keyboard.on_press(self.handler)
-        validated = False
-        while not validated:
-            while not self.ENTERED:
-                # Add a small sleep to prevent CPU spinning
-                time.sleep(0.1)
-            if (validate := self._validator(self.selected)) != True:
-                self.error = validate
-                self.ENTERED = False
-                self.print()
-            else:
-                validated = True
-        time.sleep(sleep) # Add a small sleep to prevent UI from being weird sometimes
-        return self.selected
+            sys.stdout.write(ANSIColors.reset)
+            self.print()
+            keyboard.on_press(self.handler, suppress=True)
+            validated = False
+            while not validated:
+                while not self.ENTERED:
+                    pass
+                if (validate := self._validator(self.selected)) != True:
+                    self.error = validate
+                    self.ENTERED = False
+                    self.print()
+                else:
+                    validated = True
+            time.sleep(sleep) # Add a small sleep to prevent UI from being weird sometimes
+        finally:
+            Cursor.write.show_cursor()
+            return self.selected
     
 
     def print(self):
         """Print the selector."""
+
         selector = f"{self.question}\n\n" if self.question else ""
-        print(self.options)
         for key, option in self.options.items():
             style = self.style["SELECTED" if key in self.selected else "NOT SELECTED"]
             if self.ALL and "ALL" in self.style:
@@ -190,20 +201,20 @@ class Selector:
 
             symbol = s["symbol"]
             if "fg-color" in s:
-                symbol = f"{s['fg-color']}{symbol}"
+                symbol = f"{s["fg-color"]}{symbol}"
             if "bg-color" in s:
-                symbol = f"{s['bg-color']}{symbol}"
+                symbol = f"{s["bg-color"]}{symbol}"
             symbol = f"{symbol}{ANSIColors.reset}"
 
             if "fg-color" in style:
-                option = f"{style['fg-color']}{option}"
+                option = f"{style["fg-color"]}{option}"
             if "bg-color" in style:
-                option = f"{style['bg-color']}{option}"
+                option = f"{style["bg-color"]}{option}"
             
             if "fg-color" in cursor_style:
-                symbol = f"{cursor_style['fg-color']}{symbol}"
+                symbol = f"{cursor_style["fg-color"]}{symbol}"
             if "bg-color" in cursor_style:
-                symbol = f"{cursor_style['bg-color']}{symbol}"
+                symbol = f"{cursor_style["bg-color"]}{symbol}"
             selector += f"{symbol} {option}{ANSIColors.reset}\n"
         
         if self.error:
