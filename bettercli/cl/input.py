@@ -85,30 +85,32 @@ class Input:
 
     DEFAULT_STYLE:'INPUT_STYLES' = Dict({ # type: ignore
         "prompt": Dict({
-            "bg-color": ANSIColors.reset,
-            "fg-color": ANSIColors.reset,
+            "bg-color": ANSIColors.reset_bg,
+            "fg-color": ANSIColors.reset_fg,
         }),
         "cursor": Dict({
-            "bg-color": ANSIColors.reset,
+            "bg-color": ANSIColors.reset_bg,
             "fg-color": ANSIColors.cyan,
             "symbol": "█",
         }),
         "input": Dict({
-            "bg-color": ANSIColors.reset,
-            "fg-color": ANSIColors.reset,
+            "bg-color": ANSIColors.reset_bg,
+            "fg-color": ANSIColors.reset_fg,
         }),
         "selector": Dict({
             "cursor": Dict({
                 "fg-color": ANSIColors.cyan,
+                "bg-color": ANSIColors.reset_bg,
             }),
             "not cursor": Dict({
-                "fg-color": ANSIColors.reset,
+                "fg-color": ANSIColors.reset_fg,
+                "bg-color": ANSIColors.reset_bg,
             }),
         })
     })
     def __init__(self, prompt: 'str', suggestions: 'list[str]' = None, *, style: 'INPUT_STYLES' = {}):
         self.prompt = prompt
-        self.suggestions = suggestions or []
+        self.suggestions = suggestions if suggestions is not None else []
         self.input_buffer = []
         self.cursor_pos = 0
         self.current_suggestions: list[str] = []
@@ -116,7 +118,7 @@ class Input:
         self.running = True
         self._on_input = lambda x: self.suggestions
         self.validate:'t.Callable[[str], t.Union[str, t.Literal[True]]]' = lambda x: True
-        self.style = Dict[INPUT_STYLES](style, self.DEFAULT_STYLE) # type: ignore
+        self.style = Dict[INPUT_STYLES](style if style is not None else {}, self.DEFAULT_STYLE) # type: ignore
         self.error = ""
         
     def on_input(self, filter:'bool'=True, case_sensitive:'bool'=False):

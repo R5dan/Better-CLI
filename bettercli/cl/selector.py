@@ -80,23 +80,23 @@ class Selector:
     STYLE = dict[t.Union[str, t.Literal["ALL", "NONE", "SELECTED", "NOT SELECTED", "CURSOR", "NOT CURSOR"]], STYLES]
     DEFAULT_SELECTED:'STYLES' = {
         "symbol": {
-            "bg-color": ANSIColors.reset,
-            "fg-color": ANSIColors.reset,
+            "bg-color": ANSIColors.reset_bg,
+            "fg-color": ANSIColors.reset_fg,
             "symbol": "●",
         }
     }
     DEFAULT_CURSOR:'STYLES' = {
-        "bg-color": ANSIColors.reset,
+        "bg-color": ANSIColors.reset_bg,
         "fg-color": ANSIColors.cyan,
     }
     DEFAULT_NOT_CURSOR:'STYLES' = {
-        "bg-color": ANSIColors.reset,
-        "fg-color": ANSIColors.reset,
+        "bg-color": ANSIColors.reset_bg,
+        "fg-color": ANSIColors.reset_fg,
     }
     DEFAULT_NOT_SELECTED:'STYLES' = {
         "symbol": {
-            "bg-color": ANSIColors.reset,
-            "fg-color": ANSIColors.reset,
+            "bg-color": ANSIColors.reset_bg,
+            "fg-color": ANSIColors.reset_fg,
             "symbol": "○",
         }
     }

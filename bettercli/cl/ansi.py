@@ -1,20 +1,24 @@
 import sys
 
-SYMBOL = "\033[{}m"
-
 class ANSIColors:    
-    @staticmethod
-    def rgb(r, g, b, background=False):
+    @classmethod
+    def rgb(cls, r, g, b, background=False):
         """Convert RGB to ANSI escape sequence"""
-        return SYMBOL.format(f"{48 if background else 38};2;{r};{g};{b}")
+        return cls.SYMBOL.format(f"{48 if background else 38};2;{r};{g};{b}")
     
-    @staticmethod
-    def color_256(code, background=False):
+    @classmethod
+    def color_256(cls, code, background=False):
         """Use 256 color mode"""
-        return SYMBOL.format(f"{48 if background else 38};5;{code}")
-        
+        return cls.SYMBOL.format(f"{48 if background else 38};5;{code}")
+    
+    SYMBOL = "\033[{}m"
 
     reset = SYMBOL.format(0)
+
+    reset_fg = SYMBOL.format(39)
+    reset_bg = SYMBOL.format(49)
+    reset_text_effects = SYMBOL.format(20)
+
 
     # Standard foreground colors (30-37)
     black = SYMBOL.format(30)

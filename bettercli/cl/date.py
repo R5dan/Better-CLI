@@ -16,7 +16,9 @@ LEN = t.TypeVar("LEN", bound=int, default=int)
 L = t.TypeVar("L", bound=list)
 
 class LenList(t.Generic[L, LEN], list):
-    def __init__(self, length:'LEN', list:'L'=[]):
+    def __init__(self, length:'LEN', list:'L'=None):
+        if list is None:
+            list = []
         self.length = length
         super().__init__(list)
 
@@ -49,35 +51,39 @@ class POS:
     def date(self) -> 'd':
         return d(self.year, self.month, self.day)
     
-    def __gt__(self, other:'POS', equal:'bool'=False) -> 'bool':
+    def compare(self, other:'POS', equal:'bool', gt:'bool'=False, lt:'bool'=False) -> 'bool':
         if self.year > other.year:
-            return True
+            return gt
         elif self.year < other.year:
-            return False
+            return lt
         elif self.month > other.month:
-            return True
+            return gt
         elif self.month < other.month:
-            return False
+            return lt
         elif self.y > other.y:
-            return True
+            return gt
         elif self.y < other.y:
-            return False
+            return lt
         elif self.x > other.x:
-            return True
+            return gt
         elif self.x < other.x:
-            return False
+            return lt
         else:
             return equal
 
     
+    def __gt__(self, other:'POS') -> 'bool':
+        return self.compare(other, equal=False, gt=True, lt=False)
+
+    
     def __lt__(self, other:'POS') -> 'bool':
-        return not self.__gt__(other, equal=True)
+        return self.compare(other, equal=False, gt=False, lt=True)
     
     def __ge__(self, other:'POS') -> 'bool':
-        return self.__gt__(other, equal=True)
+        return self.compare(other, equal=True, gt=True, lt=False)
     
     def __le__(self, other:'POS') -> 'bool':
-        return not self.__gt__(other, equal=False)
+        return self.compare(other, equal=True, gt=False, lt=True)
     
     def __str__(self):
         return f"({self.x},{self.y}) {self.month} {self.year}"
@@ -122,10 +128,19 @@ class Cache:
         if month not in self.cache[year]:
             self.cache[year][month] = func(month, year)
         return self.cache[year][month]
+    
+DKT = t.TypeVar("DKT", bound=t.Any)
+DVT = t.TypeVar("DVT", bound=t.Any)
 
 class Dict(dict):
-    def __init__(self, dict:'dict'={}):
+    def __init__(self, dict:'dict[DKT, DVT]'=None, default:'dict[DKT, DVT]'=None):
+        if dict is None:
+            dict = {}
+        if default is None:
+            default = {}
+        
         self.list = list(dict.values())
+        self.default = default
         super().__init__(dict)
 
     def __getitem__(self, key: t.Any) -> t.Any:
@@ -133,13 +148,73 @@ class Dict(dict):
             return self.list[key]
         return super().__getitem__(key)
     
+    def get(self, key:'T', default=None) -> 'T|t.Literal[""]':
+        if key in self:
+            return self[key]
+        elif default is not None:
+            return default
+        elif key in self.default:
+            return self.default[key]
+        else:
+            return ""
+    
+CURSOR_STYLE = t.TypedDict("CURSOR_STYLE",
+    {
+        "bg-color": str,
+        "fg-color": str,
+    },
+    total=False
+)
+
+SELECTED_STYLE = t.TypedDict("SELECTED_STYLE",
+    {
+        "bg-color": str,
+        "fg-color": str,
+    },
+    total=False
+)
+
+DEBUG_STYLE = t.TypedDict("DEBUG_STYLE",
+    {
+        "bg-color": str,
+        "fg-color": str,
+    },
+    total=False
+)
+
+STYLE = t.TypedDict("STYLE",
+    {
+        "cursor": CURSOR_STYLE,
+        "selected": SELECTED_STYLE,
+        "debugmode": bool,
+        "debug": DEBUG_STYLE,
+    },
+    total=False
+)
 
 
 class Date:
     cache = Cache()
     months = Dict({'January':31, 'February':28, 'March':31, 'April':30, 'May':31, 'June':30, 'July':31, 'August':31, 'September':30, 'October':31, 'November':30, 'December':31})
+    
+    DEFAULT_STYLE:'STYLE' = {
+        "cursor": {
+            "bg-color": ANSIColors.bg_bright_cyan,
+            "fg-color": ANSIColors.reset_fg,
+        },
+        "selected": {
+            "bg-color": ANSIColors.bg_bright_green,
+            "fg-color": ANSIColors.reset_fg,
+        },
+        "debugmode": False,
+        "debug": {
+            "bg-color": ANSIColors.bg_bright_red,
+            "fg-color": ANSIColors.reset_fg,
+        }
+    }
+    
     def __init__(self, style:'STYLE', min:'t.Union[d, None]'=None, max:'t.Union[d, None]'=None, default:'d'=None) -> None:
-        self.style = style
+        self.style = Dict(style, default=self.DEFAULT_STYLE)
         self.min = min
         self.max = max
         self.default = default
@@ -160,12 +235,12 @@ class Date:
         for row, week in enumerate(self.cache.get_or_add(self.pos.month, self.pos.year, self.get_days)):
             for col, day in enumerate(week):
                 if self.pos.x == col and self.pos.y == row:
-                    screen += f"{ANSIColors.bg_bright_cyan}{day.day:02d}{ANSIColors.reset} "
+                    screen += f"{self.style['cursor']['bg-color']}{self.style['cursor']['fg-color']}{day.day:02d}{ANSIColors.reset} "
                 elif self.selected and POS(col, row, self.pos.month, self.pos.year) < self.pos:
                     if POS(col, row, self.pos.month, self.pos.year) > self.selected:
-                        screen += f"{ANSIColors.bg_bright_green}{day.day:02d} {ANSIColors.reset}"
-                    else:
-                        screen += f"{ANSIColors.bg_bright_red}{day.day:02d} {ANSIColors.reset}"
+                        screen += f"{self.style['selected']['bg-color']}{self.style['selected']['fg-color']}{day.day:02d} {ANSIColors.reset}"
+                    elif self.style["debugmode"]:
+                        screen += f"{self.style["debug"]["bg-color"]}{self.style['debug']['fg-color']}{day.day:02d} {ANSIColors.reset}"
                 else:
                     screen += f"{day.day:02d} "
             screen += "\n"
