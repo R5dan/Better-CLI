@@ -120,7 +120,7 @@ class Input:
         self.validate:'t.Callable[[str], t.Union[str, t.Literal[True]]]' = lambda x: True
         self.style = Dict[INPUT_STYLES](style if style is not None else {}, self.DEFAULT_STYLE) # type: ignore
         self.error = ""
-        
+
     def on_input(self, filter:'bool'=True, case_sensitive:'bool'=False):
         """Decorator to handle input changes and update suggestions"""
         self.filter = filter

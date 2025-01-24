@@ -114,8 +114,6 @@ class Selector:
         assert isinstance(options, dict), "Options must be a dictionary"
         self.options = options
         self.selected = []
-        self.ALL = False
-        self.NONE = True
         self.ENTERED = False
         self.style:'Selector.STYLE' = {}
         self.keybinds = keybinds
@@ -124,12 +122,21 @@ class Selector:
         self.question = question
         self._validator = validator
         self.error = ""
+        self.keys = list(self.options.keys())
 
         
         self.style["SELECTED"] = {**self.DEFAULT_SELECTED, **self.style.get("SELECTED", {})}
         self.style["NOT SELECTED"] = {**self.DEFAULT_NOT_SELECTED, **self.style.get("NOT SELECTED", {})}
         self.style["CURSOR"] = {**self.DEFAULT_CURSOR, **self.style.get("CURSOR", {})}
         self.style["NOT CURSOR"] = {**self.DEFAULT_NOT_CURSOR, **self.style.get("NOT CURSOR", {})}
+
+    @property
+    def NONE(self):
+        return self.selected == []
+
+    @property
+    def ALL(self):
+        return self.selected == self.keys
 
 
     def handler(self, key):
@@ -147,26 +154,28 @@ class Selector:
 
     def run(self, *, sleep:'float'=0.1):
         """Run the selector."""
-        Cursor.hide_cursor()
-        self.keys = list(self.options.keys())
-        self.key = self.keys[0]
+        try:
+            Cursor.write.hide_cursor()
+            self.keys = list(self.options.keys())
+            self.key = self.keys[0]
 
-        sys.stdout.write(ANSIColors.reset)
-        self.print()
-        keyboard.on_press(self.handler, suppress=True)
-        validated = False
-        while not validated:
-            while not self.ENTERED:
-                pass
-            if (validate := self._validator(self.selected)) != True:
-                self.error = validate
-                self.ENTERED = False
-                self.print()
-            else:
-                validated = True
-        time.sleep(sleep) # Add a small sleep to prevent UI from being weird sometimes
-        Cursor.show_cursor()
-        return self.selected
+            sys.stdout.write(ANSIColors.reset)
+            self.print()
+            keyboard.on_press(self.handler, suppress=True)
+            validated = False
+            while not validated:
+                while not self.ENTERED:
+                    pass
+                if (validate := self._validator(self.selected)) != True:
+                    self.error = validate
+                    self.ENTERED = False
+                    self.print()
+                else:
+                    validated = True
+            time.sleep(sleep) # Add a small sleep to prevent UI from being weird sometimes
+        finally:
+            Cursor.write.show_cursor()
+            return self.selected
     
 
     def print(self):
@@ -192,20 +201,20 @@ class Selector:
 
             symbol = s["symbol"]
             if "fg-color" in s:
-                symbol = f"{s['fg-color']}{symbol}"
+                symbol = f"{s["fg-color"]}{symbol}"
             if "bg-color" in s:
-                symbol = f"{s['bg-color']}{symbol}"
+                symbol = f"{s["bg-color"]}{symbol}"
             symbol = f"{symbol}{ANSIColors.reset}"
 
             if "fg-color" in style:
-                option = f"{style['fg-color']}{option}"
+                option = f"{style["fg-color"]}{option}"
             if "bg-color" in style:
-                option = f"{style['bg-color']}{option}"
+                option = f"{style["bg-color"]}{option}"
             
             if "fg-color" in cursor_style:
-                symbol = f"{cursor_style['fg-color']}{symbol}"
+                symbol = f"{cursor_style["fg-color"]}{symbol}"
             if "bg-color" in cursor_style:
-                symbol = f"{cursor_style['bg-color']}{symbol}"
+                symbol = f"{cursor_style["bg-color"]}{symbol}"
             selector += f"{symbol} {option}{ANSIColors.reset}\n"
         
         if self.error:
